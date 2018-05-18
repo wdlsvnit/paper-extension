@@ -3,11 +3,8 @@
   "version": "1.0.0",
   "description": "Paper-extension syncs highlighted text to a dropbox paper",
   "manifest_version": 2,
-  "browser_action": {
-    "default_popup": "html/popup.html"
-  },
   "background": {
-    "scripts": ["js/background.js"]
+    "scripts": ["js/paper.js"]
   },
   "permissions": [
     "activeTab"
