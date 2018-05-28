@@ -8,11 +8,15 @@
     "persistent": false
   },
   "permissions": [
+
     "activeTab"
+    "contextMenus"
   ],
   "icons": {
     "16": "img/icon-small.png",
     "48": "img/icon-medium.png",
     "128": "img/icon-large.png"
   }
+}
+  ]
 }
