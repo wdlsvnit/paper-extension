@@ -4,7 +4,8 @@
   "description": "Paper-extension syncs highlighted text to a dropbox paper",
   "manifest_version": 2,
   "background": {
-    "scripts": ["js/paper.js"]
+    "scripts": ["js/paper.js"],
+    "persistent": false
   },
   "permissions": [
     "activeTab",
