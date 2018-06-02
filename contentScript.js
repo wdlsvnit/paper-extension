@@ -6,5 +6,5 @@
 })();
 
 function extractTokenFromURL(url) {
-  //TODO: get authtoken from url
+  access_token = url.match(/\#(?:access_token)\=([\S\s]*?)\&/)[1];
 }
