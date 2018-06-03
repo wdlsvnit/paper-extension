@@ -6,9 +6,10 @@
 })();
 
 function extractTokenFromURL(url) {
-  var m = url.match(/[#?](.*)/);
-  if (!m || m.length < 1)
-    console.log("Get a url");
-  var params = new URLSearchParams(m[0].split("#")[1]);
+  var urlFragment = url.match(/[#?](.*)/);
+  if (!urlFragment || urlFragment.length < 1) {
+    return null;
+  }
+  var params = new URLSearchParams(urlFragment[0].split("#")[1]);
   return params.get("access_token");
 }
