@@ -1,10 +1,14 @@
 (function(){
-  var token = extractTokenFromURL(window.location);
+  var token = extractTokenFromURL(window.location.href);
   if (token) {
     chrome.storage.sync.set({ 'token': token });
   }
 })();
 
 function extractTokenFromURL(url) {
-  access_token = url.match(/\#(?:access_token)\=([\S\s]*?)\&/)[1];
+  var m = url.match(/[#?](.*)/);
+  if (!m || m.length < 1)
+    console.log("Get a url");
+  var params = new URLSearchParams(m[0].split("#")[1]);
+  return params.get("access_token");
 }
