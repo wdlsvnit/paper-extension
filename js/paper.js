@@ -17,6 +17,33 @@ var contextMenuItem = {
 
 chrome.contextMenus.create(contextMenuItem);
 
+chrome.storage.sync.get(['token'], function(res) {
+  var authToken = res.token;
+  if (!authToken) {
+    chrome.browserAction.setBadgeText({ text: '!' });
+    chrome.browserAction.setBadgeBackgroundColor({ color: "red" });
+    chrome.browserAction.setTitle({ title: 'Please Sign-In' });
+    chrome.contextMenus.update('sendText', { visible: false });
+  }
+});
+
+chrome.storage.onChanged.addListener(function(changes, areaName) {
+  chrome.storage.sync.get(['token'], function(res) {
+    var authToken = res.token;
+    if (!authToken) {
+      chrome.browserAction.setBadgeText({ text: '!' });
+      chrome.browserAction.setBadgeBackgroundColor({ color: "red" });
+      chrome.browserAction.setTitle({ title: 'Please Sign-In' });
+      chrome.contextMenus.update('sendText', { visible: false });
+    }
+    else {
+      chrome.contextMenus.update('sendText', { visible: true });
+      chrome.browserAction.setBadgeText({ text:'' });
+      chrome.browserAction.setTitle({ title: '' });
+    }
+  });
+});
+
 chrome.contextMenus.onClicked.addListener(function(info, tab) {
   var selectedText = info.selectionText;
   chrome.storage.sync.get(['token'], function(res) {

@@ -10,6 +10,6 @@ function extractTokenFromURL(url) {
   if (!urlFragment || urlFragment.length < 1) {
     return null;
   }
-  var params = new URLSearchParams(urlFragment[0].split("#")[1]);
-  return params.get("access_token");
+  var params = new URLSearchParams(urlFragment[0]);
+  return params.get("code");
 }
