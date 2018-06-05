@@ -39,7 +39,8 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
 });
 
 function authorise() {
-  //TODO: create new tab to request authorisation (use "https://wdlsvnit.github.io/paper-extension/" as redirect url)
+  var dropboxURL = "https://www.dropbox.com/oauth2/authorize?response_type=code&client_id=" + clientId + "&redirect_uri=https://wdlsvnit.github.io/paper-extension/"
+  chrome.tabs.create({ url: dropboxURL });
 }
 
 function createPaper(token) {

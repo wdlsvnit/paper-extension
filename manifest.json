@@ -23,7 +23,8 @@
   "permissions": [
     "activeTab",
     "contextMenus",
-    "storage"
+    "storage",
+    "tabs"
   ],
   "icons": {
     "16": "img/icon-small.png",
