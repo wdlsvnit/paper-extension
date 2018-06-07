@@ -66,7 +66,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
 });
 
 function authorise() {
-  var dropboxURL = "https://www.dropbox.com/oauth2/authorize?response_type=code&client_id=" + clientId + "&redirect_uri=https://wdlsvnit.github.io/paper-extension/"
+  var dropboxURL = "https://www.dropbox.com/oauth2/authorize?response_type=token&client_id=" + clientId + "&redirect_uri=https://wdlsvnit.github.io/paper-extension/"
   chrome.tabs.create({ url: dropboxURL });
 }
 
