@@ -72,6 +72,25 @@ function authorise() {
 
 function createPaper(token) {
   //TODO: create paper on user's dropbox and store paperId to storage
+  var url = 'https://api.dropboxapi.com/2/paper/docs/create';
+  var xhr = new XMLHttpRequest();
+
+  xhr.open("POST", url ,true);
+
+  xhr.setRequestHeader("Authorization", "Bearer " + token);
+  xhr.setRequestHeader("Dropbox-API-Arg", "{\"import_format\": \"markdown\"}");
+  xhr.setRequestHeader("Content-Type", "application/octet-stream");
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == XMLHttpRequest.DONE && xhr.status == 200) {
+      var paperid = JSON.parse(this.response);
+      chrome.storage.sync.set({paperId : paperid.doc_id});
+      chrome.storage.sync.set({revision : paperid.revision});
+    }
+  };
+
+  var reqObj = {import_format: "html"};
+  xhr.send(reqObj);
 }
 
 function saveToPaper(token, paperId, text) {
