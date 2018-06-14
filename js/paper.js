@@ -55,7 +55,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
           saveToPaper(authToken, paperId, selectedText);
         }
         else {
-          createPaper(authToken);
+          createPaper(authToken, selectedText);
         }
       });
     }
@@ -70,7 +70,7 @@ function authorise() {
   chrome.tabs.create({ url: dropboxURL });
 }
 
-function createPaper(token) {
+function createPaper(token, text) {
   //TODO: create paper on user's dropbox and store paperId to storage
   var url = 'https://api.dropboxapi.com/2/paper/docs/create';
   var xhr = new XMLHttpRequest();
@@ -86,7 +86,7 @@ function createPaper(token) {
       var paperid = JSON.parse(this.response);
       chrome.storage.sync.set({paperId : paperid.doc_id});
       chrome.storage.sync.set({Revision : paperid.revision}, function(){
-      saveToPaper(authToken, paperId, selectedText);
+      saveToPaper(token, paperid.doc_id, text);
       });
     }
   };
