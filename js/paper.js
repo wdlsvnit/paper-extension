@@ -85,7 +85,9 @@ function createPaper(token) {
     if (xhr.readyState == XMLHttpRequest.DONE && xhr.status == 200) {
       var paperid = JSON.parse(this.response);
       chrome.storage.sync.set({paperId : paperid.doc_id});
-      chrome.storage.sync.set({revision : paperid.revision});
+      chrome.storage.sync.set({Revision : paperid.revision}, function(){
+      saveToPaper(authToken, paperId, selectedText);
+      });
     }
   };
 
@@ -95,4 +97,29 @@ function createPaper(token) {
 
 function saveToPaper(token, paperId, text) {
   //TODO: save text to paper
+  chrome.storage.sync.get(['Revision'], function(result) {
+    var url = 'https://api.dropboxapi.com/2/paper/docs/update';
+    var xhr = new XMLHttpRequest();
+
+    xhr.open("POST", url, true);
+
+    var rev = result.Revision;
+    
+    xhr.setRequestHeader("Authorization", "Bearer " + token);
+    xhr.setRequestHeader("Dropbox-API-Arg", "{\"doc_id\": \"" + paperId + "\",\"doc_update_policy\": \"prepend\",\"revision\": " + rev + ",\"import_format\": \"plain_text\"}");
+    xhr.setRequestHeader("Content-Type", "application/octet-stream");
+
+    xhr.onreadystatechange = function() {
+      if(xhr.readyState == XMLHttpRequest.DONE && xhr.status == 200) {
+        new_rev = JSON.parse(this.response);
+        var rrev=new_rev.revision;
+        chrome.storage.sync.set({Revision : rrev}, function(){
+        console.log('Revision is set to ' + rrev);
+        });
+      }
+    }
+
+    xhr.send(text);
+
+  });
 }
