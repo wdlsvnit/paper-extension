@@ -45,6 +45,8 @@ chrome.storage.onChanged.addListener(function(changes, areaName) {
 });
 
 chrome.contextMenus.onClicked.addListener(function(info, tab) {
+  var pageUrl = info.pageUrl;
+  var tabTitle = tab.title;
   var selectedText = info.selectionText;
   chrome.storage.sync.get(['token'], function(res) {
     var authToken = res.token;
@@ -52,10 +54,10 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
       chrome.storage.sync.get(['paperId'], function(res) {
         var paperId = res.paperId;
         if (paperId) {
-          saveToPaper(authToken, paperId, selectedText);
+          saveToPaper(authToken, paperId, selectedText, tabTitle, pageUrl);
         }
         else {
-          createPaper(authToken, selectedText);
+          createPaper(authToken, selectedText, tabTitle, pageUrl);
         }
       });
     }
@@ -70,7 +72,7 @@ function authorise() {
   chrome.tabs.create({ url: dropboxURL });
 }
 
-function createPaper(token, text) {
+function createPaper(token, text, tabTitle, pageUrl) {
   //TODO: create paper on user's dropbox and store paperId to storage
   var url = 'https://api.dropboxapi.com/2/paper/docs/create';
   var xhr = new XMLHttpRequest();
@@ -86,16 +88,16 @@ function createPaper(token, text) {
       var paperid = JSON.parse(this.response);
       chrome.storage.sync.set({paperId : paperid.doc_id});
       chrome.storage.sync.set({Revision : paperid.revision}, function(){
-        saveToPaper(token, paperid.doc_id, text);
+        saveToPaper(token, paperid.doc_id, text, tabTitle, pageUrl);
       });
     }
   };
 
-  var reqObj = {import_format: "html"};
+  var reqObj = { import_format: "html" };
   xhr.send(reqObj);
 }
 
-function saveToPaper(token, paperId, text) {
+function saveToPaper(token, paperId, text, tabTitle, pageUrl) {
   chrome.storage.sync.get(['Revision'], function(result) {
     var url = 'https://api.dropboxapi.com/2/paper/docs/update';
     var xhr = new XMLHttpRequest();
@@ -103,7 +105,7 @@ function saveToPaper(token, paperId, text) {
     var rev = result.Revision;
      
     xhr.setRequestHeader("Authorization", "Bearer " + token);
-    xhr.setRequestHeader("Dropbox-API-Arg", "{\"doc_id\": \"" + paperId + "\",\"doc_update_policy\": \"prepend\",\"revision\": " + rev + ",\"import_format\": \"markdown\"}");
+    xhr.setRequestHeader("Dropbox-API-Arg", "{\"doc_id\": \"" + paperId + "\",\"doc_update_policy\": \"append\",\"revision\": " + rev + ",\"import_format\": \"markdown\"}");
     xhr.setRequestHeader("Content-Type", "application/octet-stream");
      
     xhr.onreadystatechange = function() {
@@ -112,6 +114,10 @@ function saveToPaper(token, paperId, text) {
         chrome.storage.sync.set({Revision : new_rev.revision});
       } 
     }
-    xhr.send(text);
+    var today = new Date();
+    var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+    var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+    var dateTime = date + ' ' + time;
+    xhr.send("-\n# " + tabTitle + "\n" + text + "\n" + dateTime + ". " + "[Link](" + pageUrl + ")");
   });
 }
