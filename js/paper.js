@@ -92,9 +92,8 @@ function createPaper(token, text, tabTitle, pageUrl) {
       });
     }
   };
-
-  var reqObj = { import_format: "html" };
-  xhr.send(reqObj);
+  var title = window.prompt('Enter title for the paper: ', 'Paper-extension');
+  xhr.send(title);
 }
 
 function saveToPaper(token, paperId, text, tabTitle, pageUrl) {
