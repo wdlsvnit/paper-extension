@@ -15,7 +15,15 @@ var contextMenuItem = {
   "contexts": ["selection"]
 }
 
+var childContextMenuItem = {
+  "id": "newPaper",
+  "parentId": "sendText",
+  "title": "Create New Paper",
+  "contexts": ["selection"]
+}
+
 chrome.contextMenus.create(contextMenuItem);
+chrome.contextMenus.create(childContextMenuItem);
 
 chrome.storage.sync.get(['token'], function(res) {
   var authToken = res.token;
