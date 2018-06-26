@@ -59,15 +59,13 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
   chrome.storage.sync.get(['token'], function(res) {
     var authToken = res.token;
     if (authToken) {
-      chrome.storage.sync.get(['paperId'], function(res) {
-        var paperId = res.paperId;
-        if (paperId) {
-          saveToPaper(authToken, paperId, selectedText, tabTitle, pageUrl);
-        }
-        else {
-          createPaper(authToken, selectedText, tabTitle, pageUrl);
-        }
-      });
+      if (info.menuItemId == "newPaper") {
+        createPaper(authToken, selectedText, tabTitle, pageUrl);
+      }
+      else {
+        var paperId = info.menuItemId;
+        saveToPaper(authToken, paperId, selectedText, tabTitle, pageUrl);
+      }
     }
     else {
       window.alert('Oops! Looks like you have not authorised paper-extension yet. Sign in to dropbox by clicking paper-extension icon.');
@@ -81,7 +79,7 @@ function authorise() {
 }
 
 function createPaper(token, text, tabTitle, pageUrl) {
-  //TODO: create paper on user's dropbox and store paperId to storage
+  //Send request to create paper and Store paper revision with respective paper_id
   var url = 'https://api.dropboxapi.com/2/paper/docs/create';
   var xhr = new XMLHttpRequest();
 
@@ -94,8 +92,7 @@ function createPaper(token, text, tabTitle, pageUrl) {
   xhr.onreadystatechange = function() {
     if (xhr.readyState == XMLHttpRequest.DONE && xhr.status == 200) {
       var paperid = JSON.parse(this.response);
-      chrome.storage.sync.set({paperId : paperid.doc_id});
-      chrome.storage.sync.set({Revision : paperid.revision}, function(){
+      chrome.storage.sync.set({[paperid.doc_id] : paperid.revision}, function() {
         saveToPaper(token, paperid.doc_id, text, tabTitle, pageUrl);
       });
     }
@@ -105,11 +102,12 @@ function createPaper(token, text, tabTitle, pageUrl) {
 }
 
 function saveToPaper(token, paperId, text, tabTitle, pageUrl) {
-  chrome.storage.sync.get(['Revision'], function(result) {
+  //Send request to update paper and Update paper revision with new revision
+  chrome.storage.sync.get([paperId], function(result) {
     var url = 'https://api.dropboxapi.com/2/paper/docs/update';
     var xhr = new XMLHttpRequest();
     xhr.open("POST", url, true);
-    var rev = result.Revision;
+    var rev = result[paperId];
      
     xhr.setRequestHeader("Authorization", "Bearer " + token);
     xhr.setRequestHeader("Dropbox-API-Arg", "{\"doc_id\": \"" + paperId + "\",\"doc_update_policy\": \"append\",\"revision\": " + rev + ",\"import_format\": \"markdown\"}");
@@ -118,7 +116,7 @@ function saveToPaper(token, paperId, text, tabTitle, pageUrl) {
     xhr.onreadystatechange = function() {
       if(xhr.readyState == XMLHttpRequest.DONE && xhr.status == 200) {
         new_rev = JSON.parse(this.response);
-        chrome.storage.sync.set({Revision : new_rev.revision});
+        chrome.storage.sync.set({[paperId] : new_rev.revision});
       } 
     }
     var today = new Date();
