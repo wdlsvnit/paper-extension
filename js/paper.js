@@ -92,6 +92,15 @@ function createPaper(token, text, tabTitle, pageUrl) {
   xhr.onreadystatechange = function() {
     if (xhr.readyState == XMLHttpRequest.DONE && xhr.status == 200) {
       var paperid = JSON.parse(this.response);
+
+      var existingPaper = {
+        "id": `${paperid.doc_id}`,
+        "parentId": "sendText",
+        "title": title,
+        "contexts": ["selection"]
+      }
+      chrome.contextMenus.create(existingPaper);
+
       chrome.storage.sync.set({[paperid.doc_id] : paperid.revision}, function() {
         saveToPaper(token, paperid.doc_id, text, tabTitle, pageUrl);
       });
