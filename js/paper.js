@@ -129,9 +129,11 @@ function saveToPaper(token, paperId, text, tabTitle, pageUrl) {
       } 
     }
     var today = new Date();
-    var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
-    var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+    var date = today.toDateString();
+    var hour = today.getHours()
+    var suffix =  (hour < 12 || hour === 24) ? " AM" : " PM";
+    var time = (hour % 12 || 12) + ":" + today.getMinutes() + ":" + today.getSeconds() + suffix;
     var dateTime = date + ' ' + time;
-    xhr.send("-\n# " + tabTitle + "\n" + text + "\n" + dateTime + ". " + "[Link](" + pageUrl + ")");
+    xhr.send("-\n## " + tabTitle + " [↗](" + pageUrl + ")" + "\n" + text + "\n" + dateTime + ". ");
   });
 }
