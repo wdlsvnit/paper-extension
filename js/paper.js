@@ -76,6 +76,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
 function authorise() {
   var dropboxURL = "https://www.dropbox.com/oauth2/authorize?response_type=token&client_id=" + clientId + "&redirect_uri=https://wdlsvnit.github.io/paper-extension/"
   chrome.tabs.create({ url: dropboxURL });
+  chrome.storage.sync.set({"today": new Date(1970,1,1)});
 }
 
 function createPaper(token, text, tabTitle, pageUrl) {
@@ -117,23 +118,29 @@ function saveToPaper(token, paperId, text, tabTitle, pageUrl) {
     var xhr = new XMLHttpRequest();
     xhr.open("POST", url, true);
     var rev = result[paperId];
-     
+
     xhr.setRequestHeader("Authorization", "Bearer " + token);
     xhr.setRequestHeader("Dropbox-API-Arg", "{\"doc_id\": \"" + paperId + "\",\"doc_update_policy\": \"append\",\"revision\": " + rev + ",\"import_format\": \"markdown\"}");
     xhr.setRequestHeader("Content-Type", "application/octet-stream");
-     
+
     xhr.onreadystatechange = function() {
       if(xhr.readyState == XMLHttpRequest.DONE && xhr.status == 200) {
         new_rev = JSON.parse(this.response);
         chrome.storage.sync.set({[paperId] : new_rev.revision});
-      } 
+      }
     }
     var today = new Date();
     var date = today.toDateString();
     var hour = today.getHours()
     var suffix =  (hour < 12 || hour === 24) ? " AM" : " PM";
     var time = (hour % 12 || 12) + ":" + today.getMinutes() + ":" + today.getSeconds() + suffix;
-    var dateTime = date + ' ' + time;
-    xhr.send("-\n## " + tabTitle + " [↗](" + pageUrl + ")" + "\n" + text + "\n" + dateTime + ". ");
+    chrome.storage.sync.get("today", function(r){
+      if (r["today"] != date){
+        xhr.send(".\n# "+ date + "\n## " + tabTitle + " [↗](" + pageUrl + ")" + "\n" + text + "\n" + time);
+        chrome.storage.sync.set({"today": date});
+      } else {
+        xhr.send(".\n## " + tabTitle + " [↗](" + pageUrl + ")" + "\n" + text + "\n" + time);
+      }
+    });
   });
 }
