@@ -18,6 +18,10 @@
     {
      "matches": ["https://wdlsvnit.github.io/paper-extension/*"],
      "js": ["contentScript.js"]
+    },
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["js/getPaperList.js"]
     }
   ],
   "permissions": [

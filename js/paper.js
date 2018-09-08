@@ -1,4 +1,4 @@
-const clientId = "client id here";
+const clientId = "client_id_here";
 
 chrome.browserAction.onClicked.addListener(function(tab) {
   chrome.storage.sync.get(['token'], function(res) {
@@ -79,6 +79,7 @@ function authorise() {
 }
 
 function createPaper(token, text, tabTitle, pageUrl) {
+  console.log(`Token: ${token} | Text: ${text} | pageUrl: ${pageUrl}`);
   //Send request to create paper and Store paper revision with respective paper_id
   var url = 'https://api.dropboxapi.com/2/paper/docs/create';
   var xhr = new XMLHttpRequest();
@@ -99,12 +100,12 @@ function createPaper(token, text, tabTitle, pageUrl) {
         "title": title,
         "contexts": ["selection"]
       }
-      chrome.contextMenus.create(existingPaper);
 
       chrome.storage.sync.set({[paperid.doc_id] : paperid.revision}, function() {
         saveToPaper(token, paperid.doc_id, text, tabTitle, pageUrl);
       });
     }
+
   };
   var title = window.prompt('Enter title for the paper: ', 'Paper-extension');
   xhr.send(title);
@@ -137,3 +138,16 @@ function saveToPaper(token, paperId, text, tabTitle, pageUrl) {
     xhr.send("-\n## " + tabTitle + " [↗](" + pageUrl + ")" + "\n" + text + "\n" + dateTime + ". ");
   });
 }
+
+chrome.extension.onMessage.addListener(
+  function(request, sender, sendResponse) {
+    for (var entry of request.docs.docs) {
+      var doc =  {
+        "id": entry.doc_id,
+        "parentId": "sendText",
+        "title": entry.title,
+        "contexts": ["selection"]
+      };
+      chrome.contextMenus.create(doc);
+  }
+});
