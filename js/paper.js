@@ -64,7 +64,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
       }
       else {
         var paperId = info.menuItemId;
-        saveToPaper(authToken, paperId, selectedText, tabTitle, pageUrl);
+        getCurrentRevision(authToken, paperId, selectedText, tabTitle, pageUrl);
       }
     }
     else {
@@ -79,7 +79,6 @@ function authorise() {
 }
 
 function createPaper(token, text, tabTitle, pageUrl) {
-  console.log(`Token: ${token} | Text: ${text} | pageUrl: ${pageUrl}`);
   //Send request to create paper and Store paper revision with respective paper_id
   var url = 'https://api.dropboxapi.com/2/paper/docs/create';
   var xhr = new XMLHttpRequest();
@@ -92,62 +91,60 @@ function createPaper(token, text, tabTitle, pageUrl) {
 
   xhr.onreadystatechange = function() {
     if (xhr.readyState == XMLHttpRequest.DONE && xhr.status == 200) {
-      var paperid = JSON.parse(this.response);
-
-      var existingPaper = {
-        "id": `${paperid.doc_id}`,
-        "parentId": "sendText",
-        "title": title,
-        "contexts": ["selection"]
-      }
-
-      chrome.storage.sync.set({[paperid.doc_id] : paperid.revision}, function() {
-        saveToPaper(token, paperid.doc_id, text, tabTitle, pageUrl);
-      });
+      var paper = JSON.parse(this.response);
+      saveToPaper(token, paper.doc_id, text, tabTitle, pageUrl, paper.revision);
     }
-
   };
   var title = window.prompt('Enter title for the paper: ', 'Paper-extension');
   xhr.send(title);
 }
 
-function saveToPaper(token, paperId, text, tabTitle, pageUrl) {
-  //Send request to update paper and Update paper revision with new revision
-  chrome.storage.sync.get([paperId], function(result) {
-    var url = 'https://api.dropboxapi.com/2/paper/docs/update';
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", url, true);
-    var rev = result[paperId];
-     
-    xhr.setRequestHeader("Authorization", "Bearer " + token);
-    xhr.setRequestHeader("Dropbox-API-Arg", "{\"doc_id\": \"" + paperId + "\",\"doc_update_policy\": \"append\",\"revision\": " + rev + ",\"import_format\": \"markdown\"}");
-    xhr.setRequestHeader("Content-Type", "application/octet-stream");
-     
-    xhr.onreadystatechange = function() {
-      if(xhr.readyState == XMLHttpRequest.DONE && xhr.status == 200) {
-        new_rev = JSON.parse(this.response);
-        chrome.storage.sync.set({[paperId] : new_rev.revision});
-      } 
-    }
-    var today = new Date();
-    var date = today.toDateString();
-    var hour = today.getHours()
-    var suffix =  (hour < 12 || hour === 24) ? " AM" : " PM";
-    var time = (hour % 12 || 12) + ":" + today.getMinutes() + ":" + today.getSeconds() + suffix;
-    var dateTime = date + ' ' + time;
-    xhr.send("-\n## " + tabTitle + " [↗](" + pageUrl + ")" + "\n" + text + "\n" + dateTime + ". ");
-  });
+function getCurrentRevision(token, paperId, text, tabTitle, pageUrl) {
+  var metaDataUrl = 'https://api.dropboxapi.com/2/paper/docs/get_metadata';
+  var metaDataXhr = new XMLHttpRequest();
+  metaDataXhr.open("POST", metaDataUrl, true);
+
+  metaDataXhr.setRequestHeader("Authorization", "Bearer " + token);
+  metaDataXhr.setRequestHeader("Content-Type", "application/json");
+
+  metaDataXhr.onreadystatechange = function() {
+    if(metaDataXhr.readyState == XMLHttpRequest.DONE && metaDataXhr.status == 200) {
+      var result = JSON.parse(metaDataXhr.responseText);
+      saveToPaper(token, paperId, text, tabTitle, pageUrl, result.revision);
+    } 
+  }
+  metaDataXhr.send(JSON.stringify({
+    "doc_id": paperId
+  }));
 }
 
-chrome.extension.onMessage.addListener(
-  function(request, sender, sendResponse) {
-    for (var entry of request.docs.docs) {
-      var doc =  {
-        "id": entry.doc_id,
-        "parentId": "sendText",
-        "title": entry.title,
-        "contexts": ["selection"]
-      };
-      chrome.contextMenus.create(doc);
+function saveToPaper(token, paperId, text, tabTitle, pageUrl, currentRev) {
+  //Send request to update paper and Update paper revision with new revision
+  var url = 'https://api.dropboxapi.com/2/paper/docs/update';
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", url, true);
+
+  xhr.setRequestHeader("Authorization", "Bearer " + token);
+  xhr.setRequestHeader("Dropbox-API-Arg", "{\"doc_id\": \"" + paperId + "\",\"doc_update_policy\": \"append\",\"revision\": " + currentRev + ",\"import_format\": \"markdown\"}");
+  xhr.setRequestHeader("Content-Type", "application/octet-stream");
+
+  var today = new Date();
+  var date = today.toDateString();
+  var hour = today.getHours()
+  var suffix =  (hour < 12 || hour === 24) ? " AM" : " PM";
+  var time = (hour % 12 || 12) + ":" + today.getMinutes() + ":" + today.getSeconds() + suffix;
+  var dateTime = date + ' ' + time;
+  xhr.send("-\n## " + tabTitle + " [↗](" + pageUrl + ")" + "\n" + text + "\n" + dateTime + ". ");
+}
+
+chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
+  for (var entry of request.docs.docs) {
+    var doc =  {
+      "id": entry.doc_id,
+      "parentId": "sendText",
+      "title": entry.title,
+      "contexts": ["selection"]
+    };
+    chrome.contextMenus.create(doc);
   }
 });
