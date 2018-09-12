@@ -93,6 +93,19 @@ function createPaper(token, text, tabTitle, pageUrl) {
     if (xhr.readyState == XMLHttpRequest.DONE && xhr.status == 200) {
       var paper = JSON.parse(this.response);
       saveToPaper(token, paper.doc_id, text, tabTitle, pageUrl, paper.revision);
+
+      //add context menu option for new paper
+      var doc =  {
+        "id": paper.doc_id,
+        "parentId": "sendText",
+        "title": paper.title,
+        "contexts": ["selection"]
+      };
+      chrome.contextMenus.create(doc);
+      chrome.storage.sync.get(['papers'], function(res) {
+        res.papers.push(paper.doc_id);
+        chrome.storage.sync.set({ 'papers': res.papers});
+      });
     }
   };
   var title = window.prompt('Enter title for the paper: ', 'Paper-extension');
@@ -138,13 +151,31 @@ function saveToPaper(token, paperId, text, tabTitle, pageUrl, currentRev) {
 }
 
 chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
-  for (var entry of request.docs.docs) {
-    var doc =  {
-      "id": entry.doc_id,
-      "parentId": "sendText",
-      "title": entry.title,
-      "contexts": ["selection"]
-    };
-    chrome.contextMenus.create(doc);
-  }
+  chrome.storage.sync.get(['papers'], function(res) {
+    var allDocs = request.docs.docs;
+    for (var entry of allDocs) {
+      if (res.papers.indexOf(entry.doc_id) === -1) {
+        var doc =  {
+          "id": entry.doc_id,
+          "parentId": "sendText",
+          "title": entry.title,
+          "contexts": ["selection"]
+        };
+        chrome.contextMenus.create(doc);
+        res.papers.push(entry.doc_id);
+        chrome.storage.sync.set({ 'papers': res.papers});
+      }
+    }
+
+    if (res.papers.length > allDocs.length) {
+      var docIdArray = allDocs.map(function(doc) {
+        return doc.doc_id;
+      });
+      for (var paper of res.papers) {
+        if (docIdArray.indexOf(paper) === -1) {
+          chrome.contextMenus.remove(paper);
+        }
+      }
+    }
+  });
 });
