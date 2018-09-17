@@ -11,8 +11,14 @@ A chrome extension to sync the highlighted text from web to a dropbox paper.
 
 ### Installation
 1. Download the paper extension from the [builds folder](https://github.com/wdlsvnit/paper-extension/blob/master/builds/paper-extension.crx).
-2. Add extension to chrome as shown here:
+2. Add extension to chrome with just *"Drag & Drop"* as shown here (If you are not on Windows!):
 ![Installation](https://user-images.githubusercontent.com/27485533/45442995-2b96cc80-b6e1-11e8-8065-b9e30943ae0b.gif)
+For Windows, follow these steps:
+    - Extract .crx file. (Use [7-zip](http://www.7-zip.org/))
+    - Go to Chrome menu and click *Tools* then *Extensions* and toggle the *Developer Mode* ON.
+    - Click on load *UNPACKED EXTENSION* and select the folder where you've extracted the extension.
+
+
 
 ### Use
 - Click on the paper-extension icon and authorize.
